@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio - Galpão do Gil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --category-title-scroll-margin: 220px;
+            /* Default adjusted for initial header + nav */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('imagens/chamas_loop.gif');
+            background-repeat: no-repeat, no-repeat;
+            background-size: cover, cover;
+            background-position: center center, center center;
+            background-attachment: fixed, fixed;
+            color: #f0f0f0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .menu-title-header {
+            font-family: 'Poppins', sans-serif;
+            color: #FFA500;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        #main-header {
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+        }
+
+        #main-header.scrolled-away {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #category-shortcuts-nav {
+            background-color: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: top 0.4s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        #category-shortcuts-nav.fixed-top {
+            top: 0 !important;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .shortcut-link {
+            background-color: #FF8C00;
+            color: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            text-decoration: none;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .shortcut-link:hover {
+            background-color: #FFA500;
+            transform: translateY(-2px);
+        }
+
+        .category-title {
+            font-family: 'Poppins', sans-serif;
+            color: #FF8C00;
+            border-bottom: 2px solid #FF8C00;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            scroll-margin-top: var(--category-title-scroll-margin);
+        }
+
+        .item-card {
+            background-color: rgba(42, 42, 42, 0.9);
+            border: 1px solid #444;
+            border-radius: 0.75rem;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 165, 0, 0.25);
+        }
+
+        .item-card img {
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            object-fit: cover;
+            aspect-ratio: 16/10;
+        }
+
+        .price {
+            color: #FFA500;
+            font-weight: bold;
+        }
+
+        .btn-add {
+            background-color: #FF8C00;
+            color: #1a1a1a;
+            font-weight: bold;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-add:hover {
+            background-color: #FFA500;
+        }
+
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            font-weight: bold;
+            border-radius: 0.5rem;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #1DAA53;
+        }
+
+        .modal {
+            background-color: rgba(0, 0, 0, 0.85);
+        }
+
+        .modal-content {
+            background-color: #282828;
+            color: #f0f0f0;
+            border-radius: 0.75rem;
+            border: 1px solid #FF8C00;
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            color: #FFA500;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #FF8C00;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FFA500;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #FFA500;
+            color: #1a1a1a;
+            text-align: center;
+            border-radius: 0.5rem;
+            padding: 16px;
+            position: fixed;
+            z-index: 200;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 30px;
+            font-size: 17px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @-webkit-keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @-webkit-keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        .info-button {
+            background-color: #FF8C00;
+            color: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .info-button:hover {
+            background-color: #FFA500;
+        }
+
+        .site-footer {
+            background-color: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            color: #ccc;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            margin-top: auto;
+        }
+
+        .footer-button {
+            /* Também usado para o botão no modal de informações */
+            background-color: #FFA500;
+            color: #1a1a1a;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .footer-button:hover {
+            background-color: #FF8C00;
+        }
+
+        .services-list li {
+            padding: 0.3rem 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .services-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header id="main-header" class="py-4 text-center sticky top-0 z-50"
+        style="background-color: rgba(20, 20, 20, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-3xl md:text-4xl font-bold menu-title-header flex-grow text-center">Galpão do Gil</h1>
+            <button id="info-btn" class="info-button text-sm md:text-base ml-4 whitespace-nowrap">
+                Informações
+            </button>
+        </div>
+    </header>
+
+    <!-- Category Shortcuts Navigation -->
+    <nav id="category-shortcuts-nav" class="sticky z-40 shadow-lg">
+        <div id="category-shortcuts-container"
+            class="container mx-auto px-4 py-3 flex flex-wrap gap-x-3 gap-y-2 justify-center overflow-x-auto">
+            <!-- Shortcuts will be rendered here by JavaScript -->
+        </div>
+    </nav>
+
+    <!-- Menu Items -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div id="menu-categories">
+            <!-- Categories will be rendered here by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Floating "View Order" Button -->
+    <button id="view-order-btn"
+        class="fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-5 rounded-full shadow-lg flex items-center z-30">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        Ver Pedido (<span id="order-count">0</span>)
+    </button>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="fixed inset-0 flex items-center justify-center p-4 modal hidden z-[60]">
+        <div class="modal-content w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold modal-title">Seu Pedido</h2>
+                <button id="close-order-modal-btn"
+                    class="text-gray-400 hover:text-orange-400 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="modal-order-items" class="mb-4 max-h-60 overflow-y-auto pr-2">
+                <p id="empty-order-msg">Seu pedido está vazio.</p>
+            </div>
+            <div class="border-t border-gray-600 pt-4">
+                <div class="flex justify-between mb-2">
+                    <span>Subtotal:</span>
+                    <span id="subtotal-price">R$ 0,00</span>
+                </div>
+                <fieldset class="mb-4">
+                    <legend class="text-lg font-semibold mb-2 text-orange-400">Opção de Entrega:</legend>
+                    <div class="flex gap-4">
+                        <div>
+                            <input type="radio" id="retirada" name="delivery_option" value="retirada"
+                                class="mr-1 accent-orange-500" checked>
+                            <label for="retirada">Retirada no Local</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="entrega" name="delivery_option" value="entrega"
+                                class="mr-1 accent-orange-500">
+                            <label for="entrega">Entrega (+ R$ 2,00)</label>
+                        </div>
+                    </div>
+                </fieldset>
+                <div id="delivery-info" class="hidden mb-4 space-y-3">
+                    <div>
+                        <label for="customer-name" class="block text-sm font-medium mb-1">Seu Nome:</label>
+                        <input type="text" id="customer-name"
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-orange-500 focus:ring-orange-500 outline-none"
+                            placeholder="Digite seu nome">
+                    </div>
+                    <div>
+                        <label for="customer-address" class="block text-sm font-medium mb-1">Endereço / Ponto de
+                            Referência:</label>
+                        <input type="text" id="customer-address"
+                            class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-orange-500 focus:ring-orange-500 outline-none"
+                            placeholder="Ex: Rua Exemplo, 123, Bairro">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="order-notes" class="block text-sm font-medium mb-1">Observações (opcional):</label>
+                    <textarea id="order-notes" rows="2"
+                        class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-orange-500 focus:ring-orange-500 outline-none"
+                        placeholder="Ex: Espetinho mal passado, sem cebola, etc."></textarea>
+                </div>
+                <div class="flex justify-between font-bold text-xl mb-6">
+                    <span>Total:</span>
+                    <span id="total-price" class="text-orange-400">R$ 0,00</span>
+                </div>
+                <button id="send-whatsapp-btn"
+                    class="w-full btn-whatsapp py-3 px-4 rounded-lg flex items-center justify-center text-lg disabled:opacity-50"
+                    disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="currentColor" class="mr-2">
+                        <path
+                            d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.47.074-.742.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+                    </svg>
+                    Enviar Pedido
+                </button>
+            </div>
+            <p id="whatsapp-error" class="text-red-400 text-sm mt-2 text-center hidden">Por favor, preencha os campos
+                obrigatórios.</p>
+        </div>
+    </div>
+
+    <!-- Information Modal -->
+    <div id="info-modal" class="fixed inset-0 flex items-center justify-center p-4 modal hidden z-[70]">
+        <div class="modal-content w-full max-w-md p-6 shadow-xl flex flex-col">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-2xl font-bold modal-title">Informações do Galpão</h2>
+                <button id="close-info-modal-btn"
+                    class="text-gray-400 hover:text-orange-400 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="info-modal-content-area" class="space-y-4 text-gray-300 text-sm md:text-base mb-6">
+                <p><strong class="text-orange-400">Horário de Funcionamento:</strong><br>
+                    Terça a Domingo: 18:00 - 00:00<br>
+                    Segunda: Fechado
+                </p>
+                <p><strong class="text-orange-400">Localização:</strong><br>
+                    Rua do Galpão Famoso, Nº 789<br>
+                    Bairro Central, Cidade Alegre - ES
+                </p>
+                <p><strong class="text-orange-400">Contato:</strong><br>
+                    Telefone/WhatsApp: (XX) XXXXX-XXXX (Substitua pelo seu)<br>
+                    Instagram: @galpaodogil (Exemplo)
+                </p>
+                <p class="mt-3 text-gray-400">Venha nos visitar e saborear os melhores espetinhos da região!</p>
+            </div>
+            <button id="request-digital-product-info-modal-btn" class="footer-button w-full mt-auto">
+                Peça seu produto digital para seu negócio!
+            </button>
+        </div>
+    </div>
+
+    <!-- Services Modal -->
+    <div id="services-modal" class="fixed inset-0 flex items-center justify-center p-4 modal hidden z-[80]">
+        <div class="modal-content w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-2xl font-bold modal-title">Nossos Serviços Digitais</h2>
+                <button id="close-services-modal-btn"
+                    class="text-gray-400 hover:text-orange-400 text-3xl leading-none">&times;</button>
+            </div>
+            <p class="mb-4 text-gray-300">Nossa equipe está preparada para transformar sua ideia em realidade. Confira
+                alguns dos nossos serviços:</p>
+            <ul class="services-list list-disc list-inside mb-6 text-gray-300 space-y-1 pl-2">
+                <li>Cardápio personalizado para o seu negócio</li>
+                <li>Loja on-line</li>
+                <li>Página de vendas</li>
+                <li>Portfólio Profissional/Empresarial</li>
+                <li>Sistema de gestão</li>
+                <li>Sistemas de análise de dados</li>
+                <li>Sistemas educacionais e plataformas EAD</li>
+                <li>Site institucional</li>
+                <li>Sistema de aluguel de veículos</li>
+                <li>Sistema de aluguel de imóveis</li>
+                <li>Assistente pessoal com IA para sua empresa</li>
+                <li>Automação de WhatsApp</li>
+                <li>Automação de Telegram</li>
+                <li>Bots para WhatsApp e outras plataformas</li>
+                <li>E muito mais!</li>
+            </ul>
+            <button id="request-service-btn"
+                class="w-full btn-whatsapp py-3 px-4 rounded-lg flex items-center justify-center text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                </svg>
+                Solicitar Orçamento
+            </button>
+        </div>
+    </div>
+
+    <div id="toast">Item adicionado ao pedido!</div>
+
+    <footer class="site-footer">
+        <p class="mb-2">Criado por: <strong class="text-orange-400">DevArc startup</strong> & <strong
+                class="text-orange-400">Arcelino Cavalcante</strong></p>
+        <button id="request-digital-product-btn" class="footer-button">
+            Peça o seu cardápio digital para o seu negócio!
+        </button>
+    </footer>
+
+    <script>
+        // --- CONFIGURAÇÃO ---
+        const RESTAURANT_WHATSAPP_NUMBER = "5500000000000"; // SUBSTITUA PELO SEU NÚMERO: 55 + DDD + NUMERO
+        const DEV_ARC_WHATSAPP_NUMBER = "5500912345678"; // SUBSTITUA PELO WHATSAPP DA DEV ARC
+        const DELIVERY_FEE = 2.00;
+        const ORANGE_PLACEHOLDER_BG = "FFA500";
+        const WHITE_PLACEHOLDER_TEXT = "FFFFFF";
+
+        const menuData = {
+            "Espetinhos": [
+                { id: 'esp_carne', name: 'Espetinho de Carne', price: 6.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Esp.+Carne' },
+                { id: 'esp_frango', name: 'Espetinho de Frango', price: 6.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Esp.+Frango' },
+                { id: 'esp_linguica', name: 'Espetinho de Linguiça', price: 6.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Esp.+Linguiça' },
+                { id: 'esp_coracao', name: 'Espetinho de Coração', price: 6.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Esp.+Coração' },
+                { id: 'esp_queijo_coalho', name: 'Espetinho de Queijo Coalho', price: 7.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Queijo+Coalho' },
+                { id: 'esp_kafta', name: 'Produto 01 Espetinhos (Kafta)', price: 7.50, image_filename: 'esp_carne.jpg', placeholder_text: 'Esp.+Kafta' },
+                { id: 'esp_medalhao_frango', name: 'Produto 02 Espetinhos (Med. Frango)', price: 8.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Med.+Frango' },
+                { id: 'esp_medalhao_carne', name: 'Produto 03 Espetinhos (Med. Carne)', price: 8.50, image_filename: 'esp_carne.jpg', placeholder_text: 'Med.+Carne' },
+                { id: 'esp_vegetariano', name: 'Produto 04 Espetinhos (Vegetariano)', price: 7.00, image_filename: 'esp_carne.jpg', placeholder_text: 'Esp.+Veg' },
+            ],
+            "Pães Recheados": [
+                { id: 'pao_alho_trad', name: 'Pão de Alho Tradicional', price: 6.00, image_filename: 'pao_alho_trad.jpg', placeholder_text: 'Pão+Alho+Trad.' },
+                { id: 'pao_alho_queijo', name: 'Pão de Alho com Queijo', price: 7.00, image_filename: 'pao_alho_trad.jpg', placeholder_text: 'Pão+Alho+Queijo' },
+                { id: 'pao_linguica_queijo', name: 'Pão com Linguiça e Queijo', price: 8.00, image_filename: 'pao_alho_trad.jpg', placeholder_text: 'Pão+Linguiça' },
+                { id: 'pao_calabresa_cheddar', name: 'Produto 01 Pães (Calabresa/Cheddar)', price: 8.50, image_filename: 'pao_alho_trad.jpg', placeholder_text: 'Pão+Calabresa' },
+                { id: 'pao_frango_catupiry', name: 'Produto 02 Pães (Frango/Catupiry)', price: 8.50, image_filename: 'pao_alho_trad.jpg', placeholder_text: 'Pão+Frango' },
+                { id: 'pao_doce_chocolate', name: 'Produto 03 Pães (Doce Chocolate)', price: 7.50, image_filename: 'pao_alho_trad.jpg', placeholder_text: 'Pão+Doce' },
+            ],
+            "Bebidas Alcoólicas": [
+                { id: 'cerveja_skol_lata', name: 'Cerveja Skol Lata 350ml', price: 5.00, image_filename: 'cerveja_skol_lata.jpg', placeholder_text: 'Skol' },
+                { id: 'cerveja_brahma_lata', name: 'Cerveja Brahma Lata 350ml', price: 5.00, image_filename: 'cerveja_brahma_lata.jpg', placeholder_text: 'Brahma' },
+                { id: 'cerveja_heineken_long', name: 'Cerveja Heineken Long Neck', price: 8.00, image_filename: 'cerveja_heineken_long.jpg', placeholder_text: 'Heineken' },
+                { id: 'cerveja_budweiser_long', name: 'Produto 01 Beb. Alc. (Budweiser LN)', price: 8.00, image_filename: 'cerveja_budweiser_long.jpg', placeholder_text: 'Budweiser' },
+                { id: 'cerveja_stella_long', name: 'Produto 02 Beb. Alc. (Stella Artois LN)', price: 9.00, image_filename: 'cerveja_stella_long.jpg', placeholder_text: 'Stella' },
+                { id: 'caipirinha_limao', name: 'Produto 03 Beb. Alc. (Caipirinha Limão)', price: 12.00, image_filename: 'caipirinha_limao.jpg', placeholder_text: 'Caipirinha' },
+            ],
+            "Refrigerantes e Energéticos": [
+                { id: 'coca_lata', name: 'Coca-Cola Lata 350ml', price: 4.50, image_filename: 'coca_lata.jpg', placeholder_text: 'Coca-Cola' },
+                { id: 'guarana_lata', name: 'Guaraná Antarctica Lata 350ml', price: 4.00, image_filename: 'guarana_lata.jpg', placeholder_text: 'Guaraná' },
+                { id: 'redbull', name: 'Energético Red Bull 250ml', price: 10.00, image_filename: 'redbull.jpg', placeholder_text: 'Red+Bull' },
+                { id: 'pepsi_lata', name: 'Produto 01 Refri (Pepsi Lata)', price: 4.00, image_filename: 'pepsi_lata.jpg', placeholder_text: 'Pepsi' },
+                { id: 'monster_energetico', name: 'Produto 02 Energ. (Monster 473ml)', price: 12.00, image_filename: 'monster_energetico.jpg', placeholder_text: 'Monster' },
+                { id: 'suco_laranja_natural', name: 'Produto 03 Suco (Laranja Natural 500ml)', price: 7.00, image_filename: 'suco_laranja_natural.jpg', placeholder_text: 'Suco+Laranja' },
+            ],
+            "Doses": [
+                { id: 'dose_campari', name: 'Dose de Campari', price: 12.00, image_filename: 'dose_campari.jpg', placeholder_text: 'Campari' },
+                { id: 'dose_vodka_smirnoff', name: 'Dose de Vodka Smirnoff', price: 10.00, image_filename: 'dose_vodka_smirnoff.jpg', placeholder_text: 'Smirnoff' },
+                { id: 'dose_whisky_red', name: 'Dose de Whisky Red Label', price: 15.00, image_filename: 'dose_whisky_red.jpg', placeholder_text: 'Red+Label' },
+                { id: 'dose_gin_tanqueray', name: 'Produto 01 Doses (Gin Tanqueray)', price: 18.00, image_filename: 'dose_gin_tanqueray.jpg', placeholder_text: 'Tanqueray' },
+                { id: 'dose_tequila_ouro', name: 'Produto 02 Doses (Tequila Ouro)', price: 14.00, image_filename: 'dose_tequila_ouro.jpg', placeholder_text: 'Tequila' },
+            ]
+        };
+
+        let currentOrder = [];
+
+        // DOM Elements
+        const mainHeader = document.getElementById('main-header');
+        const categoryShortcutsNav = document.getElementById('category-shortcuts-nav');
+        const categoryShortcutsContainer = document.getElementById('category-shortcuts-container');
+        const menuCategoriesContainer = document.getElementById('menu-categories');
+
+        const viewOrderBtn = document.getElementById('view-order-btn');
+        const orderCountSpan = document.getElementById('order-count');
+
+        const orderModal = document.getElementById('order-modal');
+        const closeOrderModalBtn = document.getElementById('close-order-modal-btn');
+        const modalOrderItemsContainer = document.getElementById('modal-order-items');
+        const emptyOrderMsg = document.getElementById('empty-order-msg');
+        const subtotalPriceSpan = document.getElementById('subtotal-price');
+        const totalPriceSpan = document.getElementById('total-price');
+        const deliveryInfoDiv = document.getElementById('delivery-info');
+        const deliveryOptionRadios = document.querySelectorAll('input[name="delivery_option"]');
+        const orderNotesInput = document.getElementById('order-notes');
+        const sendWhatsappBtn = document.getElementById('send-whatsapp-btn');
+        const customerNameInput = document.getElementById('customer-name');
+        const customerAddressInput = document.getElementById('customer-address');
+        const whatsappErrorMsg = document.getElementById('whatsapp-error');
+
+        const infoBtn = document.getElementById('info-btn');
+        const infoModal = document.getElementById('info-modal');
+        const closeInfoModalBtn = document.getElementById('close-info-modal-btn');
+        const requestDigitalProductInfoModalBtn = document.getElementById('request-digital-product-info-modal-btn');
+
+        const requestDigitalProductBtn = document.getElementById('request-digital-product-btn');
+        const servicesModal = document.getElementById('services-modal');
+        const closeServicesModalBtn = document.getElementById('close-services-modal-btn');
+        const requestServiceBtn = document.getElementById('request-service-btn');
+
+        const toast = document.getElementById('toast');
+
+        // Utility Functions
+        function formatPrice(price) {
+            return `R$ ${price.toFixed(2).replace('.', ',')}`;
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.className = "show";
+            setTimeout(function () { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // Header and Navigation Logic
+        function updateCategoryScrollMargin() {
+            const headerHeight = mainHeader.offsetHeight;
+            const shortcutsNavHeight = categoryShortcutsNav.offsetHeight;
+            let margin;
+            if (mainHeader.classList.contains('scrolled-away')) {
+                margin = shortcutsNavHeight + 20;
+            } else {
+                margin = headerHeight + shortcutsNavHeight + 20;
+            }
+            document.documentElement.style.setProperty('--category-title-scroll-margin', margin + 'px');
+        }
+
+        function handleScroll() {
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            const headerHeightThreshold = mainHeader.offsetHeight > 0 ? mainHeader.offsetHeight : 60;
+
+            if (scrollPosition > headerHeightThreshold) {
+                mainHeader.classList.add('scrolled-away');
+                categoryShortcutsNav.classList.add('fixed-top');
+                categoryShortcutsNav.style.top = '0px';
+            } else {
+                mainHeader.classList.remove('scrolled-away');
+                categoryShortcutsNav.classList.remove('fixed-top');
+                categoryShortcutsNav.style.top = headerHeightThreshold + 'px';
+            }
+            updateCategoryScrollMargin();
+        }
+
+        function setupStickyNavigation() {
+            if (mainHeader && categoryShortcutsNav) {
+                categoryShortcutsNav.style.top = (mainHeader.offsetHeight > 0 ? mainHeader.offsetHeight : 60) + 'px';
+                updateCategoryScrollMargin();
+                window.addEventListener('scroll', handleScroll);
+                window.addEventListener('resize', () => {
+                    categoryShortcutsNav.style.top = (mainHeader.offsetHeight > 0 ? mainHeader.offsetHeight : 60) + 'px';
+                    handleScroll();
+                });
+            }
+        }
+
+        // Menu Rendering
+        function renderCategoryShortcuts() {
+            categoryShortcutsContainer.innerHTML = '';
+            for (const category in menuData) {
+                const categoryId = 'category-' + category.replace(/\s+/g, '-').toLowerCase();
+                const link = document.createElement('a');
+                link.href = `#${categoryId}`;
+                link.textContent = category;
+                link.className = 'shortcut-link';
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetElement = document.getElementById(this.getAttribute('href').substring(1));
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+                categoryShortcutsContainer.appendChild(link);
+            }
+        }
+
+        function renderMenuItems() {
+            menuCategoriesContainer.innerHTML = '';
+            for (const category in menuData) {
+                const categoryId = 'category-' + category.replace(/\s+/g, '-').toLowerCase();
+                const categoryDiv = document.createElement('div');
+                categoryDiv.id = categoryId;
+
+                const categoryTitleEl = document.createElement('h2');
+                categoryTitleEl.classList.add('text-3xl', 'font-semibold', 'mb-6', 'category-title');
+                categoryTitleEl.textContent = category;
+                categoryDiv.appendChild(categoryTitleEl);
+
+                const itemsGrid = document.createElement('div');
+                itemsGrid.classList.add('grid', 'grid-cols-2', 'sm:grid-cols-2', 'lg:grid-cols-3', 'xl:grid-cols-4', 'gap-4', 'md:gap-6');
+
+                menuData[category].forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.classList.add('item-card', 'shadow-lg', 'overflow-hidden', 'flex', 'flex-col');
+                    // Tentará carregar de 'imagens/produtos/'. Se falhar, usa o placeholder específico.
+                    const placeholderUrl = `https://placehold.co/300x200/${ORANGE_PLACEHOLDER_BG}/${WHITE_PLACEHOLDER_TEXT}?text=${encodeURIComponent(item.placeholder_text)}`;
+                    itemCard.innerHTML = `
+                        <img src="imagens/produtos/${item.image_filename}" alt="${item.name}" class="w-full h-32 sm:h-40 md:h-48 object-cover" onerror="this.onerror=null;this.src='${placeholderUrl}';">
+                        <div class="p-3 md:p-4 flex flex-col flex-grow">
+                            <h3 class="text-base sm:text-lg md:text-xl font-semibold mb-1 text-white leading-tight">${item.name}</h3>
+                            <p class="price text-md sm:text-lg mb-2 md:mb-3">${formatPrice(item.price)}</p>
+                            <button data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" class="mt-auto btn-add w-full py-1.5 md:py-2 px-3 md:px-4 rounded text-sm md:text-base">
+                                Adicionar
+                            </button>
+                        </div>
+                    `;
+                    itemsGrid.appendChild(itemCard);
+                });
+                categoryDiv.appendChild(itemsGrid);
+                menuCategoriesContainer.appendChild(categoryDiv);
+            }
+
+            document.querySelectorAll('.btn-add').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.target.dataset.id;
+                    const name = e.target.dataset.name;
+                    const price = parseFloat(e.target.dataset.price);
+                    addToOrder(id, name, price);
+                });
+            });
+        }
+
+        // Order Logic
+        function addToOrder(id, name, price) {
+            const existingItem = currentOrder.find(item => item.id === id);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                currentOrder.push({ id, name, price, quantity: 1 });
+            }
+            updateOrderSummary();
+            showToast(`${name} adicionado!`);
+        }
+
+        function updateOrderSummary() {
+            const totalItems = currentOrder.reduce((sum, item) => sum + item.quantity, 0);
+            orderCountSpan.textContent = totalItems;
+            renderOrderModalItems();
+            updateTotalPrice();
+            sendWhatsappBtn.disabled = totalItems === 0;
+            emptyOrderMsg.classList.toggle('hidden', totalItems > 0);
+        }
+
+        function renderOrderModalItems() {
+            modalOrderItemsContainer.innerHTML = '';
+            if (currentOrder.length === 0) {
+                emptyOrderMsg.classList.remove('hidden');
+                modalOrderItemsContainer.appendChild(emptyOrderMsg);
+                return;
+            }
+            emptyOrderMsg.classList.add('hidden');
+
+            currentOrder.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('flex', 'justify-between', 'items-center', 'py-2', 'border-b', 'border-gray-700', 'last:border-b-0');
+                itemDiv.innerHTML = `
+                    <div>
+                        <p class="font-semibold">${item.name}</p>
+                        <p class="text-sm text-gray-400">${formatPrice(item.price)} x ${item.quantity}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <button data-index="${index}" class="quantity-change bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded-l">-</button>
+                        <span class="px-3 tabular-nums">${item.quantity}</span>
+                        <button data-index="${index}" class="quantity-change bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded-r">+</button>
+                        <button data-index="${index}" class="remove-item text-red-500 hover:text-red-400 ml-3 text-xs font-semibold">Remover</button>
+                    </div>
+                `;
+                modalOrderItemsContainer.appendChild(itemDiv);
+            });
+
+            document.querySelectorAll('.quantity-change').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    if (e.target.textContent === '+') currentOrder[index].quantity++;
+                    else if (currentOrder[index].quantity > 1) currentOrder[index].quantity--;
+                    else currentOrder.splice(index, 1);
+                    updateOrderSummary();
+                });
+            });
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    currentOrder.splice(parseInt(e.target.dataset.index), 1);
+                    updateOrderSummary();
+                });
+            });
+        }
+
+        function updateTotalPrice() {
+            const subtotal = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            subtotalPriceSpan.textContent = formatPrice(subtotal);
+            let total = subtotal;
+            const deliveryType = document.querySelector('input[name="delivery_option"]:checked').value;
+
+            if (deliveryType === 'entrega' && subtotal > 0) {
+                total += DELIVERY_FEE;
+                deliveryInfoDiv.classList.remove('hidden');
+            } else {
+                deliveryInfoDiv.classList.add('hidden');
+                if (deliveryType === 'retirada') {
+                    customerNameInput.value = '';
+                    customerAddressInput.value = '';
+                    whatsappErrorMsg.classList.add('hidden');
+                }
+            }
+            totalPriceSpan.textContent = formatPrice(total);
+        }
+
+        function generateWhatsAppMessage() {
+            const deliveryType = document.querySelector('input[name="delivery_option"]:checked').value;
+            const customerName = customerNameInput.value.trim();
+            const customerAddress = customerAddressInput.value.trim();
+            const orderNotes = orderNotesInput.value.trim();
+
+            if (deliveryType === 'entrega' && (!customerName || !customerAddress)) {
+                whatsappErrorMsg.textContent = "Por favor, preencha nome e endereço para entrega.";
+                whatsappErrorMsg.classList.remove('hidden');
+                return null;
+            }
+            whatsappErrorMsg.classList.add('hidden');
+
+            let message = `*Novo Pedido - Galpão do Gil!*\n\n`;
+            if (customerName) message += `*Cliente:* ${customerName}\n`;
+            message += `*Tipo:* ${deliveryType === 'entrega' ? 'Entrega' : 'Retirada no Local'}\n`;
+            if (deliveryType === 'entrega' && customerAddress) message += `*Endereço:* ${customerAddress}\n`;
+            if (orderNotes) message += `\n*Observações:* ${orderNotes}\n`;
+            message += `\n*Itens do Pedido:*\n`;
+            currentOrder.forEach(item => {
+                message += `- ${item.quantity}x ${item.name} (${formatPrice(item.price * item.quantity)})\n`;
+            });
+            const subtotal = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            message += `\n*Subtotal:* ${formatPrice(subtotal)}\n`;
+            let finalTotal = subtotal;
+            if (deliveryType === 'entrega' && subtotal > 0) {
+                message += `*Taxa de Entrega:* ${formatPrice(DELIVERY_FEE)}\n`;
+                finalTotal += DELIVERY_FEE;
+            }
+            message += `*Total Geral:* ${formatPrice(finalTotal)}\n\n`;
+            message += `Agradecemos a preferência!`;
+            return encodeURIComponent(message);
+        }
+
+        // Modal Event Listeners
+        viewOrderBtn.addEventListener('click', () => {
+            orderModal.classList.remove('hidden');
+            updateOrderSummary();
+        });
+        closeOrderModalBtn.addEventListener('click', () => orderModal.classList.add('hidden'));
+        orderModal.addEventListener('click', (e) => { if (e.target === orderModal) orderModal.classList.add('hidden'); });
+
+        infoBtn.addEventListener('click', () => infoModal.classList.remove('hidden'));
+        closeInfoModalBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
+        infoModal.addEventListener('click', (e) => { if (e.target === infoModal) infoModal.classList.add('hidden'); });
+
+        // Event listener for the new button inside the Information Modal
+        requestDigitalProductInfoModalBtn.addEventListener('click', () => {
+            infoModal.classList.add('hidden'); // Close info modal
+            servicesModal.classList.remove('hidden'); // Open services modal
+        });
+
+        requestDigitalProductBtn.addEventListener('click', () => servicesModal.classList.remove('hidden'));
+        closeServicesModalBtn.addEventListener('click', () => servicesModal.classList.add('hidden'));
+        servicesModal.addEventListener('click', (e) => { if (e.target === servicesModal) servicesModal.classList.add('hidden'); });
+
+        requestServiceBtn.addEventListener('click', () => {
+            const devArcMessage = encodeURIComponent("Olá! Gostaria de solicitar um orçamento para um dos seus serviços digitais listados no cardápio do Galpão do Gil.");
+            if (DEV_ARC_WHATSAPP_NUMBER === "5500912345678") {
+                alert("Número de WhatsApp para orçamento ainda não configurado. Contate o desenvolvedor.");
+                return;
+            }
+            window.open(`https://wa.me/${DEV_ARC_WHATSAPP_NUMBER}?text=${devArcMessage}`, '_blank');
+        });
+
+
+        // Other Event Listeners
+        deliveryOptionRadios.forEach(radio => radio.addEventListener('change', updateTotalPrice));
+        [customerNameInput, customerAddressInput].forEach(input => {
+            input.addEventListener('input', () => {
+                if (!whatsappErrorMsg.classList.contains('hidden')) {
+                    const deliveryType = document.querySelector('input[name="delivery_option"]:checked').value;
+                    if (deliveryType !== 'entrega' || (customerNameInput.value.trim() && customerAddressInput.value.trim())) {
+                        whatsappErrorMsg.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        sendWhatsappBtn.addEventListener('click', () => {
+            if (RESTAURANT_WHATSAPP_NUMBER === "5500000000000") {
+                whatsappErrorMsg.textContent = "Sistema de pedidos indisponível. Tente mais tarde.";
+                whatsappErrorMsg.classList.remove('hidden');
+                sendWhatsappBtn.disabled = true;
+                setTimeout(() => { if (currentOrder.length > 0) sendWhatsappBtn.disabled = false; }, 3000);
+                return;
+            }
+            const message = generateWhatsAppMessage();
+            if (message) {
+                window.open(`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}?text=${message}`, '_blank');
+            }
+        });
+
+        // Initial Render & Setup
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMenuItems();
+            renderCategoryShortcuts();
+            setupStickyNavigation();
+            updateOrderSummary();
+            handleScroll();
+        });
+
+    </script>
+</body>
+
+</html>
